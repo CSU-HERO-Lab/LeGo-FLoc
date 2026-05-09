@@ -1,0 +1,48 @@
+D: 128
+batch_size: 16
+d_hyp: -0.2
+d_max: 20.0
+d_min: 0.1
+dataset:
+  data_folder: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder
+  default_fwidth: 0.5958764342211061
+  default_map_resolution: 0.02
+  floorplan_img_size:
+  - 256
+  - 256
+  rgb_img_size:
+  - 640
+  - 480
+  splits: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder/split_68train_12test.yaml
+  type: palms
+  val_split: test
+encoder_target_width: 40
+encoding_size: 128
+epochs: 20
+eval_batch_size: 16
+expert_3dp_checkpoint: checkpoints/experts/palms_3dp.ckpt
+expert_rsk_checkpoint: checkpoints/experts/palms_rsk.ckpt
+freeze_pretrained_encoder: false
+fusion_shape_loss_weight: 1.0
+gpu_ids:
+- 0
+image_log_freq: 500
+localization_eval:
+  dataset_path: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder
+  default_fwidth: 0.5958764342211061
+  default_map_resolution: 0.02
+  desdf_path: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder/desdf
+  enabled: true
+  eval_freq: 5
+  mode: both
+  monitor_metric: val_session360_1m_recall
+  monitor_mode: max
+  ray_v: 9
+  split_key: test
+lr: 0.0001
+method: fusion
+num_workers: 4
+project_name: lego_floc_palms_fusion
+run_name: lego_floc_palms_fusion
+use_wandb: false
+wandb_log_freq: 10

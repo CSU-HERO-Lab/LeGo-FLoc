@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+logs/
+wandb/
+eval_runs/
+lightning_logs/
+datasets*/
+checkpoints/
+*.ckpt
+*.pth
+.vscode/
+.idea/
+.DS_Store
+EOF

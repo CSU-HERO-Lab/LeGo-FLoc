@@ -1,0 +1,46 @@
+D: 128
+batch_size: 16
+d_hyp: -0.2
+d_max: 20.0
+d_min: 0.1
+dataset:
+  data_folder: datasets_s3d/Structured3D
+  default_fwidth: 0.5958764342211061
+  default_map_resolution: 0.02
+  floorplan_img_size:
+  - 256
+  - 256
+  rgb_img_size:
+  - 640
+  - 480
+  splits: datasets_s3d/Structured3D/split.yaml
+  type: s3d
+  val_split: test
+encoder_target_width: 40
+encoding_size: 128
+epochs: 20
+eval_batch_size: 16
+freeze_pretrained_encoder: false
+gpu_ids:
+- 0
+image_log_freq: 500
+localization_eval:
+  dataset_path: datasets_s3d/Structured3D
+  default_fwidth: 0.5958764342211061
+  default_map_resolution: 0.02
+  desdf_path: datasets_s3d/desdf
+  enabled: true
+  eval_freq: 5
+  mode: frame
+  monitor_metric: val_frame_1m_recall
+  monitor_mode: max
+  ray_v: 9
+  split_key: test
+lr: 0.0001
+method: RSK
+num_workers: 4
+pretrained_rsk_path: checkpoints/resnet50_RSK.pth
+project_name: lego_floc_s3d_rsk
+run_name: lego_floc_s3d_rsk
+use_wandb: false
+wandb_log_freq: 10

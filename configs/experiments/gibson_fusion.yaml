@@ -1,0 +1,48 @@
+D: 128
+batch_size: 16
+d_hyp: -0.2
+d_max: 20.0
+d_min: 0.1
+dataset:
+  data_folder: datasets_gibson/gibson_f
+  default_fwidth: 0.375
+  default_map_resolution: 0.01
+  floorplan_img_size:
+  - 256
+  - 256
+  rgb_img_size:
+  - 640
+  - 480
+  splits: datasets_gibson/gibson_f/split.yaml
+  type: gibson
+  val_split: test
+encoder_target_width: 40
+encoding_size: 128
+epochs: 20
+eval_batch_size: 16
+expert_3dp_checkpoint: checkpoints/experts/gibson_3dp.ckpt
+expert_rsk_checkpoint: checkpoints/experts/gibson_rsk.ckpt
+freeze_pretrained_encoder: false
+fusion_shape_loss_weight: 1.0
+gpu_ids:
+- 0
+image_log_freq: 500
+localization_eval:
+  dataset_path: datasets_gibson/gibson_f
+  default_fwidth: 0.375
+  default_map_resolution: 0.01
+  desdf_path: datasets_gibson/desdf
+  enabled: true
+  eval_freq: 5
+  mode: frame
+  monitor_metric: val_frame_1m_recall
+  monitor_mode: max
+  ray_v: 11
+  split_key: test
+lr: 0.0001
+method: fusion
+num_workers: 4
+project_name: lego_floc_gibson_fusion
+run_name: lego_floc_gibson_fusion
+use_wandb: false
+wandb_log_freq: 10
