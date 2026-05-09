@@ -6,8 +6,8 @@ logs/
 wandb/
 eval_runs/
 lightning_logs/
-datasets*/
-checkpoints/
+datasets*
+checkpoints
 *.ckpt
 *.pth
 .vscode/
