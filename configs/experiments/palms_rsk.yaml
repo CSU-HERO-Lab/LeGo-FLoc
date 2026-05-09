@@ -28,7 +28,7 @@ localization_eval:
   dataset_path: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder
   default_fwidth: 0.5958764342211061
   default_map_resolution: 0.02
-  desdf_path: datasets_palms_main/full_s3d_like_oracle_noflip_rgborder/desdf
+  desdf_path: datasets_palms_main/full_s3d_like_desdf_hardclip20
   enabled: true
   eval_freq: 5
   mode: both

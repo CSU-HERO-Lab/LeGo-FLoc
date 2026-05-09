@@ -11,6 +11,16 @@ from lego_floc.config import load_config
 from lego_floc.evaluator import evaluate_dataset, print_summary
 from lego_floc.lightning_module import DepthLightningModule
 
+
+def load_model(checkpoint_path, device):
+    try:
+        module = DepthLightningModule.load_from_checkpoint(checkpoint_path, map_location=device)
+    except KeyError:
+        ckpt = torch.load(checkpoint_path, map_location=device)
+        module = DepthLightningModule(config=ckpt['hyper_parameters'])
+        module.load_state_dict(ckpt['state_dict'], strict=True)
+    return module.model.to(device).eval()
+
 DATASET_TYPE = "gibson"
 DEFAULT_MODE = "frame"
 
@@ -30,8 +40,7 @@ def main():
     if args.split_key is not None:
         eval_cfg['split_key'] = args.split_key
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    module = DepthLightningModule.load_from_checkpoint(args.checkpoint, map_location=device)
-    model = module.model.to(device).eval()
+    model = load_model(args.checkpoint, device)
     results = evaluate_dataset(dataset_type=DATASET_TYPE, dataset_path=eval_cfg['dataset_path'], desdf_path=eval_cfg['desdf_path'], model=model, device=device, split_file=eval_cfg.get('split_file'), split_key=eval_cfg.get('split_key', 'test'), mode=eval_cfg.get('mode', DEFAULT_MODE), ray_v=eval_cfg.get('ray_v'), default_map_resolution=eval_cfg.get('default_map_resolution'), default_fwidth=eval_cfg.get('default_fwidth'), rgb_image_size=config['datasets'].get('rgb_img_size'))
     for key, metrics in results.items():
         print_summary(key, metrics)
