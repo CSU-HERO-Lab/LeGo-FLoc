@@ -20,8 +20,8 @@ encoder_target_width: 40
 encoding_size: 128
 epochs: 20
 eval_batch_size: 16
-expert_3dp_checkpoint: checkpoints/experts/gibson_3dp.ckpt
-expert_rsk_checkpoint: checkpoints/experts/gibson_rsk.ckpt
+expert_3dp_checkpoint: checkpoints/LeGo_ckpts/3dp_Gibson_f/mono.ckpt
+expert_rsk_checkpoint: checkpoints/LeGo_ckpts/RSK_Gibson_f/mono.ckpt
 freeze_pretrained_encoder: false
 fusion_shape_loss_weight: 1.0
 gpu_ids:

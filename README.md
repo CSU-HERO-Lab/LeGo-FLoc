@@ -5,8 +5,8 @@ LeGo-FLoc is the clean experiment repository for the 3DP, RSK, and fusion locali
 ## Methods
 
 - `3DP`: ResNet50 initialized from 3DPrior weights.
-- `RSK`: ResNet50-IBN initialized from RSK weights.
-- `fusion`: freezes a trained 3DP expert and a trained RSK expert, then trains a selector to fuse their predicted depth distributions.
+- `RSK`: legacy mono-depth ResNet50 key layout initialized from compatible RSK weights.
+- `fusion`: freezes a trained RSK expert (`mv_net`) and a trained 3DP expert (`mono_net`), then trains the legacy `selector` to fuse their predicted depth distributions.
 
 ## Data And Checkpoints
 
@@ -35,11 +35,13 @@ python training/train_depth_model.py --config configs/experiments/palms_rsk.yaml
 python training/train_depth_model.py --config configs/experiments/palms_fusion.yaml
 ```
 
-Fusion configs require trained expert checkpoints, for example:
+Fusion configs require trained expert checkpoints. The S3D/Gibson example configs point at the current local LeGo checkpoints; for new runs, replace these paths with the matching same-dataset 3DP and RSK `mono.ckpt` files.
 
-```yaml
-expert_3dp_checkpoint: checkpoints/experts/s3d_3dp.ckpt
-expert_rsk_checkpoint: checkpoints/experts/s3d_rsk.ckpt
+LeGo-FLoc saves checkpoints with the same legacy module prefixes as the evaluated checkpoints:
+
+```text
+3DP / RSK: encoder.depth_feature.*
+fusion: comp_d_net.mv_net.*, comp_d_net.mono_net.*, comp_d_net.selector.*
 ```
 
 ## Evaluation

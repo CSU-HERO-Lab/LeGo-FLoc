@@ -4,8 +4,8 @@ import pytorch_lightning as pl
 from torch.optim import AdamW
 
 from lego_floc.config import normalize_config
-from lego_floc.depth_model import DepthPredModel
 from lego_floc.evaluator import evaluate_dataset
+from lego_floc.legacy_model import LegacyDepthNet, LegacyDualExpertFusion
 
 
 class DepthLightningModule(pl.LightningModule):
@@ -20,21 +20,95 @@ class DepthLightningModule(pl.LightningModule):
         self.config = normalize_config(config)
         self.save_hyperparameters(self.config)
         self.localization_eval_cfg = self.config.get('localization_eval', {})
-        self.model = DepthPredModel(self.config)
+        self.method = str(self.config['method']).lower()
+        self._build_model()
+
+    def _build_model(self):
+        params = dict(
+            d_min=float(self.config.get('d_min', 0.1)),
+            d_max=float(self.config.get('d_max', 20.0)),
+            d_hyp=float(self.config.get('d_hyp', -0.2)),
+            D=int(self.config.get('D', 128)),
+        )
+        if self.method in {'3dp', 'rsk'}:
+            self.encoder = LegacyDepthNet(
+                method=self.method,
+                pretrained_3dp_path=self.config.get('pretrained_3dp_path'),
+                pretrained_rsk_path=self.config.get('pretrained_rsk_path'),
+                **params,
+            )
+        elif self.method == 'fusion':
+            expert_3dp = self._load_expert(self.config['expert_3dp_ckpt_path'], method='3dp', params=params)
+            expert_rsk = self._load_expert(self.config['expert_rsk_ckpt_path'], method='rsk', params=params)
+            self.comp_d_net = LegacyDualExpertFusion(
+                mv_net=expert_rsk,
+                mono_net=expert_3dp,
+                selector_hidden_dim=int(self.config.get('fusion_selector_hidden_dim', 64)),
+                **params,
+            )
+        else:
+            raise ValueError(f'Unsupported method: {self.config["method"]}')
+
+    def _load_expert(self, ckpt_path, method, params):
+        expert = LegacyDepthNet(
+            method=method,
+            pretrained_3dp_path=self.config.get('pretrained_3dp_path'),
+            pretrained_rsk_path=self.config.get('pretrained_rsk_path'),
+            load_pretrained=False,
+            **params,
+        )
+        ckpt = torch.load(ckpt_path, map_location='cpu')
+        state = ckpt.get('state_dict', ckpt)
+        encoder_state = {}
+        for key, value in state.items():
+            if key.startswith('encoder.'):
+                encoder_state[key[len('encoder.'):]] = value
+        if not encoder_state:
+            raise ValueError(f'Expert checkpoint has no encoder.* keys: {ckpt_path}')
+        missing, unexpected = expert.load_state_dict(encoder_state, strict=True)
+        if missing or unexpected:
+            raise RuntimeError(f'Failed to load expert {ckpt_path}: missing={len(missing)} unexpected={len(unexpected)}')
+        expert.requires_grad_(False)
+        expert.eval()
+        return expert
+
+    @property
+    def model(self):
+        return self
 
     def forward(self, func_name, **kwargs):
-        return self.model(func_name, **kwargs)
+        if func_name == 'encode':
+            return kwargs['obs_img']
+        if func_name == 'decoder_train':
+            pred = self._predict(kwargs['depth_cond'])
+            loss = F.l1_loss(pred, kwargs['gt_ray'])
+            shape_weight = self.config.get('fusion_shape_loss_weight') if self.method == 'fusion' else None
+            out = {'pred': pred, 'loss': loss}
+            if shape_weight is not None:
+                shape_loss = float(shape_weight) * (1 - F.cosine_similarity(pred, kwargs['gt_ray'], dim=-1).mean())
+                out['shape_loss'] = shape_loss
+                out['loss'] = loss + shape_loss
+            return out
+        if func_name == 'decoder_inference':
+            return self._predict(kwargs['depth_cond'])
+        raise NotImplementedError(func_name)
+
+    def _predict(self, obs_img):
+        if self.method in {'3dp', 'rsk'}:
+            pred, _, _ = self.encoder(obs_img)
+            return pred
+        return self.comp_d_net(obs_img)['d_comp']
 
     def training_step(self, batch, batch_idx):
         obs, pose, ray, floorplan, wh, fwidth, map_resolution, floorplan_path = batch
-        output = self.model('decoder_train', depth_cond=self.model('encode', obs_img=obs), gt_ray=ray)
+        output = self('decoder_train', depth_cond=obs, gt_ray=ray)
         loss = output['loss']
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         obs, pose, ray, floorplan, wh, fwidth, map_resolution, floorplan_path = batch
-        pred = self.model('decoder_inference', depth_cond=self.model('encode', obs_img=obs))
+        pred = self('decoder_inference', depth_cond=obs)
         val_loss = F.mse_loss(pred, ray)
         val_l1 = F.l1_loss(pred, ray)
         self.log('val_depth_loss', val_loss, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
@@ -54,14 +128,14 @@ class DepthLightningModule(pl.LightningModule):
             return
         if not self.trainer.is_global_zero:
             return
-        was_training = self.model.training
-        self.model.eval()
+        was_training = self.training
+        self.eval()
         try:
             results = evaluate_dataset(
                 dataset_type=cfg.get('dataset_type', self.config['dataset']['type']),
                 dataset_path=cfg['dataset_path'],
                 desdf_path=cfg['desdf_path'],
-                model=self.model,
+                model=self,
                 device=self.device,
                 split_file=cfg.get('split_file'),
                 split_key=cfg.get('split_key', 'val'),
@@ -82,4 +156,4 @@ class DepthLightningModule(pl.LightningModule):
                 self.log(key, float(value), on_epoch=True, logger=True, prog_bar=key.endswith('1m_recall'))
             print('[localization_eval]', {k: round(float(v), 4) for k, v in metrics.items()})
         finally:
-            self.model.train(was_training)
+            self.train(was_training)
