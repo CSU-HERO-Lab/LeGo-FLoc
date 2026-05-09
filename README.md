@@ -84,6 +84,8 @@ Dataset-specific evaluation settings are fixed in the configs:
 
 ## Checkpoints
 
+Pretrained weights and released LeGo-FLoc checkpoints are available from [Google Drive](https://drive.google.com/drive/folders/1A9DbJgx7Ih0U5eoYb65bP7d86_svTf4R?usp=sharing).
+
 The configs expect these initialization weights:
 
 ```text
@@ -235,17 +237,4 @@ eval/eval_gibson.py        Gibson evaluation
 eval/eval_s3d.py           S3D evaluation
 eval/eval_palms.py         PALMS evaluation
 configs/experiments/       Paper experiment configs
-```
-
-## Citation
-
-If you use this code, please cite:
-
-```bibtex
-@article{chen2026legofloc,
-  title={LeGo-FLoc: Learning 3D Geometric Priors and Room Style Knowledge for Adaptive Visual Floorplan Localization},
-  author={Chen, Bolei and Meng, Shiyong and Kang, Jiaxu and Zhong, Ping and Liang, Yixiong and Liu, Xinwang and Wang, Jianxin},
-  journal={TBD},
-  year={2026}
-}
 ```
