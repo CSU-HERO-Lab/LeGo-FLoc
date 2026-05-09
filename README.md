@@ -1,10 +1,14 @@
 # LeGo-FLoc
 
-Official code organization for **LeGo-FLoc: Learning 3D Geometric Priors and Room Style Knowledge for Adaptive Visual Floorplan Localization**.
+<div align="center">
 
-**Authors:** Bolei Chen, Shiyong Meng, Jiaxu Kang, Ping Zhong*, Yixiong Liang, Xinwang Liu, Jianxin Wang*
+## LeGo-FLoc: Learning 3D Geometric Priors and Room Style Knowledge for Adaptive Visual Floorplan Localization
 
-`*` Corresponding authors.
+**Bolei Chen** &nbsp;&middot;&nbsp; **Shiyong Meng** &nbsp;&middot;&nbsp; **Jiaxu Kang** &nbsp;&middot;&nbsp; **Ping Zhong<sup>&dagger;</sup>** &nbsp;&middot;&nbsp; **Yixiong Liang** &nbsp;&middot;&nbsp; **Xinwang Liu** &nbsp;&middot;&nbsp; **Jianxin Wang<sup>&dagger;</sup>**
+
+<sup>&dagger;</sup> Corresponding authors
+
+</div>
 
 LeGo-FLoc studies visual floorplan localization with three trainable/evaluable variants:
 
